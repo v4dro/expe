@@ -1,0 +1,637 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Архитектура вычислений | Сетевой проект</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(145deg, #F5F7FC 0%, #E9EEF5 100%);
+            color: #1A2C3E;
+            line-height: 1.45;
+        }
+
+        /* LAYOUT: фиксированная левая панель + контент */
+        .app-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ========= ЛЕВАЯ НАВИГАЦИЯ (SIDEBAR) ========= */
+        .sidebar {
+            width: 280px;
+            background: rgba(10, 35, 50, 0.95);
+            backdrop-filter: blur(8px);
+            color: #eef4ff;
+            padding: 2rem 1.2rem;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.8rem;
+            border-left: 4px solid #F4C542;
+            padding-left: 12px;
+        }
+
+        .nav-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-bottom: 2rem;
+        }
+
+        .nav-link {
+            color: #e0edf5;
+            text-decoration: none;
+            padding: 0.7rem 1rem;
+            border-radius: 16px;
+            transition: 0.2s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.05);
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            background: #F4C542;
+            color: #1A2C3E;
+            transform: translateX(6px);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 1.8rem 2rem;
+            max-width: calc(100% - 280px);
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(2px);
+            border-radius: 2rem;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.1);
+            padding: 1.8rem 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #0B2B40 0%, #1A4B6B 100%);
+            border-radius: 2rem;
+            padding: 2rem;
+            color: white;
+            margin-bottom: 2rem;
+        }
+
+        .hero h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+        }
+
+        .badge-info {
+            display: inline-block;
+            background: #F4C542;
+            color: #1A2C3E;
+            padding: 0.2rem 1rem;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            display: inline-block;
+            background: #2A6F8F;
+            color: white;
+            font-weight: 600;
+            padding: 0.7rem 1.6rem;
+            border-radius: 60px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+
+        .btn-small {
+            padding: 0.4rem 1.2rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #2A6F8F;
+            color: #2A6F8F;
+        }
+
+        .btn-outline:hover {
+            background: #2A6F8F;
+            color: white;
+        }
+
+        .btn:hover {
+            background: #1E5A77;
+            transform: translateY(-2px);
+        }
+
+        /* Стили для заданий */
+        .task-block {
+            background: #F8FBFE;
+            border-radius: 1.5rem;
+            padding: 1.2rem;
+            margin-bottom: 1.5rem;
+            border-left: 6px solid #F4C542;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+        .task-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .task-question {
+            background: #EFF3F8;
+            padding: 0.8rem;
+            border-radius: 1rem;
+            margin: 0.7rem 0;
+        }
+        .answer-area {
+            margin-top: 0.8rem;
+        }
+        .answer-input {
+            width: 100%;
+            padding: 0.7rem;
+            border-radius: 20px;
+            border: 1px solid #CBD5E1;
+            font-family: inherit;
+            resize: vertical;
+        }
+        .answer-submit {
+            margin-top: 0.5rem;
+            background: #2A6F8F;
+            color: white;
+            border: none;
+            padding: 0.4rem 1.2rem;
+            border-radius: 30px;
+            cursor: pointer;
+        }
+        .answer-status {
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            color: #2C6E2C;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .team-item {
+            background: #F1F5F9;
+            border-radius: 1rem;
+            padding: 0.8rem 1rem;
+            margin-bottom: 0.8rem;
+            border-left: 5px solid #F4C542;
+        }
+        .team-name {
+            font-weight: 800;
+            font-size: 1.1rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            text-align: left;
+            padding: 0.8rem 0.5rem;
+            border-bottom: 1px solid #E2E8F0;
+        }
+        th {
+            background: #EFF3F8;
+        }
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .form-group {
+            flex: 1;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 0.7rem;
+            border-radius: 20px;
+            border: 1px solid #CBD5E1;
+            font-family: inherit;
+        }
+        .faq-item {
+            background: #F8FAFE;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .faq-question {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #1F4E6E;
+        }
+        .ask-question-area {
+            background: #EFF3F8;
+            border-radius: 1.5rem;
+            padding: 1.2rem;
+            margin-top: 1.5rem;
+        }
+        .footer-note {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #4A627A;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #CFDFE9;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .info-card {
+            background: #F8FAFE;
+            border-radius: 1rem;
+            padding: 1rem;
+        }
+        @media (max-width: 850px) {
+            .app-wrapper { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: relative; }
+            .main-content { max-width: 100%; padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-wrapper">
+    <!-- ЛЕВАЯ ПАНЕЛЬ НАВИГАЦИИ -->
+    <div class="sidebar">
+        <h3>⚙️ Архитектура</h3>
+        <div class="nav-menu">
+            <div class="nav-link" data-target="about">🏠 О проекте</div>
+            <div class="nav-link" data-target="kvest-tasks">🗺️ Квест-карта</div>
+            <div class="nav-link" data-target="teams-manager">👥 Команды + меню</div>
+            <div class="nav-link" data-target="results">🏆 Рейтинг</div>
+            <div class="nav-link" data-target="plan">📅 Дорожная карта</div>
+            <div class="nav-link" data-target="materials">📚 Материалы</div>
+            <div class="nav-link" data-target="faq">❓ FAQ</div>
+        </div>
+        <div style="margin-top: 1.5rem; font-size:0.75rem; opacity:0.7;">
+            <hr style="border-color:#2c5775;">
+            <p>© Купаловские проекты, 2026<br>Автор: Данилевич Н.Ю.<br>Гродно, ГрГУ</p>
+        </div>
+    </div>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
+    <div class="main-content">
+        <!-- HERO -->
+        <div class="hero" id="about">
+            <span class="badge-info">🔬 IT-проект • 10 класс • Гродно</span>
+            <h1>Архитектура вычислений</h1>
+            <div style="font-size:1.2rem; margin-top:0.5rem;">«Понимать, как устроено — значит уметь выбирать.»</div>
+        </div>
+
+        <!-- ПОЛНАЯ ИНФОРМАЦИЯ О ПРОЕКТЕ (из визитки) -->
+        <div class="card">
+            <h2>📌 Детальная информация о проекте</h2>
+            <div class="info-grid">
+                <div class="info-card"><strong>👤 Автор:</strong> Данилевич Никита Юрьевич<br><strong>📍 Город:</strong> Гродно, Гродненская область<br><strong>🏛️ Учреждение:</strong> ГрГУ имени Янки Купалы</div>
+                <div class="info-card"><strong>🎯 Цель:</strong> научиться понимать принципы работы программного и аппаратного обеспечения компьютера.<br><strong>📦 Практический результат:</strong> участники соберут виртуальную модель компьютера из комплектующих, обосновав совместимость и назначение.</div>
+                <div class="info-card"><strong>⏱️ Продолжительность:</strong> 3 недели (10 часов: 2 аудиторных + 8 самостоятельных)<br><strong>👥 Возраст:</strong> 15-16 лет (10 класс)<br><strong>💻 Форма проведения:</strong> дистанционная</div>
+            </div>
+            <hr style="margin: 1rem 0;">
+            <p><strong>📖 Предметная область:</strong> Информатика, уровень образования — среднее общее (10 класс). Проект направлен на освоение стандартов по теме «Компьютер как универсальное устройство обработки информации».</p>
+            <p><strong>🧠 Учебная тема:</strong> КОМПЬЮТЕР КАК УНИВЕРСАЛЬНОЕ УСТРОЙСТВО ОБРАБОТКИ ИНФОРМАЦИИ</p>
+            <p><strong>🔧 Учебное содержание:</strong> Структурная схема компьютера. Процессор, виды и назначение памяти, системная шина. Виды и назначение внешних устройств. Принципы работы аппаратных средств компьютера.</p>
+            <p><strong>🌐 Межпредметные связи:</strong> информатика 10 класс</p>
+            <p><strong>📚 Образовательные стандарты:</strong> ФГОС СОО (информатика). Учащиеся освоят структурную схему, принципы работы процессора и памяти, научатся подбирать совместимые комплектующие.</p>
+        </div>
+
+        <!-- КВЕСТ-КАРТА С ЗАДАНИЯМИ -->
+        <div class="card" id="kvest-tasks">
+            <h2>🗺️ Квест-карта: задания для школьников</h2>
+            <p style="margin-bottom: 1rem;">Выполните задания этапов, напишите свои ответы и получите баллы. Ответы сохраняются в локальном хранилище вашей команды.</p>
+            
+            <!-- Задание 1 -->
+            <div class="task-block" id="task1">
+                <div class="task-title">🔧 Этап 1. Структурная схема ПК</div>
+                <div class="task-question"><strong>Вопрос:</strong> Перечислите основные элементы структурной схемы компьютера и кратко объясните назначение системной шины.</div>
+                <div class="answer-area">
+                    <textarea id="answer1" class="answer-input" rows="2" placeholder="Введите ваш ответ..."></textarea>
+                    <button class="answer-submit" data-task="1">📤 Отправить ответ</button>
+                    <div id="status1" class="answer-status"></div>
+                </div>
+            </div>
+
+            <!-- Задание 2 -->
+            <div class="task-block" id="task2">
+                <div class="task-title">⚙️ Этап 2. Процессор и память</div>
+                <div class="task-question"><strong>Вопрос:</strong> Что такое тактовая частота процессора? Чем оперативная память отличается от постоянной (ПЗУ)?</div>
+                <div class="answer-area">
+                    <textarea id="answer2" class="answer-input" rows="2" placeholder="Ваш ответ..."></textarea>
+                    <button class="answer-submit" data-task="2">📤 Отправить ответ</button>
+                    <div id="status2" class="answer-status"></div>
+                </div>
+            </div>
+
+            <!-- Задание 3 -->
+            <div class="task-block" id="task3">
+                <div class="task-title">🖥️ Этап 3. Внешние устройства и совместимость</div>
+                <div class="task-question"><strong>Вопрос:</strong> Назовите не менее трёх внешних устройств ПК. Почему при сборке важно учитывать форм-фактор материнской платы и блока питания?</div>
+                <div class="answer-area">
+                    <textarea id="answer3" class="answer-input" rows="2" placeholder="Ваш ответ..."></textarea>
+                    <button class="answer-submit" data-task="3">📤 Отправить ответ</button>
+                    <div id="status3" class="answer-status"></div>
+                </div>
+            </div>
+
+            <!-- Задание 4 -->
+            <div class="task-block" id="task4">
+                <div class="task-title">🧩 Этап 4. Подбор конфигурации</div>
+                <div class="task-question"><strong>Задание:</strong> Опишите конфигурацию ПК для игровой станции или 3D-моделирования (процессор, видеокарта, объем ОЗУ, тип накопителя). Обоснуйте совместимость.</div>
+                <div class="answer-area">
+                    <textarea id="answer4" class="answer-input" rows="3" placeholder="Напишите вашу сборку и обоснование..."></textarea>
+                    <button class="answer-submit" data-task="4">📤 Отправить ответ</button>
+                    <div id="status4" class="answer-status"></div>
+                </div>
+            </div>
+            <p style="font-size:0.85rem; margin-top: 0.5rem;">✨ Ответы сохраняются в браузере. После проверки координатор добавит баллы в рейтинг.</p>
+        </div>
+
+        <!-- Управление командами -->
+        <div class="card" id="teams-manager">
+            <h2>👥 Управление командами проекта</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>🏷️ Название команды</label>
+                    <input type="text" id="teamNameInput" placeholder="например: «Кэш-память»">
+                </div>
+                <div class="form-group">
+                    <label>👥 Участники (через запятую)</label>
+                    <input type="text" id="teamMembersInput" placeholder="Иванов, Петрова">
+                </div>
+                <div><button class="btn" id="addTeamBtn">✅ Добавить команду</button></div>
+            </div>
+            <h3>📋 Список команд (динамический)</h3>
+            <div id="dynamicTeamsList"></div>
+        </div>
+
+        <!-- Таблица рейтинга -->
+        <div class="card" id="results">
+            <h2>🏆 Таблица продвижения команд</h2>
+            <div style="overflow-x: auto;"><table id="scoreTable"><thead><tr><th>Место</th><th>Команда</th><th>Сценарий</th><th>⚡ Баллы</th><th>Этап</th><th>Бейдж</th></tr></thead><tbody id="scoreTableBody"></tbody></table></div>
+            <button class="btn btn-small" id="demoUpdateBtn" style="margin-top:0.8rem;">➕ Симуляция получения баллов за задания</button>
+        </div>
+
+        <!-- Дорожная карта -->
+        <div class="card" id="plan">
+            <h2>📅 Дорожная карта проекта (3 недели)</h2>
+            <ul style="margin-left: 1.5rem;">
+                <li><strong>Подготовительный этап:</strong> Регистрация команд, знакомство с вводной презентацией, заполнение таблицы З-И-У-К, получение шаблонов.</li>
+                <li><strong>Основной этап (8 часов самостоятельной работы):</strong> Изучение структурной схемы ПК, выбор сценария использования, подбор комплектующих в онлайн-конфигураторе, заполнение чек-листа совместимости, подготовка презентации.</li>
+                <li><strong>Заключительный этап:</strong> Взаимное рецензирование, публичная защита лучших работ, рефлексия, подведение итогов и награждение номинациями («Лучшая совместимость», «Креативное обоснование», «Бюджетный шедевр»).</li>
+            </ul>
+        </div>
+
+        <!-- Материалы и ресурсы -->
+        <div class="card" id="materials">
+            <h2>📎 Материалы и ресурсы</h2>
+            <p><strong>🛠️ Оборудование и ПО:</strong> Компьютер с доступом в интернет, онлайн-конфигуратор PCPartPicker (или локальный аналог), Google Презентации / Документы, сервисы веб 2.0 (Miro, Canva).</p>
+            <p><strong>📄 Печатные материалы:</strong> УМК по информатике 10 класс (Босова, Поляков), технические спецификации производителей.</p>
+            <p><strong>🔗 Информационные источники:</strong> видеолекции по архитектуре ПК, сайты Intel, AMD, NVIDIA.</p>
+            <p><strong>📋 Для обучающихся с трудностями:</strong> готовые образцы всех заданий (шаблоны) размещены на страницах этапов, принцип «МИНИМАКСА».</p>
+        </div>
+
+        <!-- FAQ С ВОЗМОЖНОСТЬЮ ЗАДАТЬ ВОПРОС -->
+        <div class="card" id="faq">
+            <h2>❓ Часто задаваемые вопросы</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">🔹 Как получить максимальный балл за проект?</div>
+                <p>Выполнить все этапы: изучить теорию, подобрать совместимые комплектующие под выбранную задачу, грамотно обосновать выбор, подготовить защиту и принять участие во взаимном рецензировании.</p>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question">🔹 Можно ли собирать конфигурацию не в PCPartPicker, а в другом сервисе?</div>
+                <p>Да, можно использовать любой онлайн-конфигуратор (DNS, Regard или таблицу Excel с проверкой сокета). Главное — доказать совместимость.</p>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question">🔹 Что делать, если команда испытывает трудности в выборе компонентов?</div>
+                <p>На сайте проекта есть готовые примеры сборок для разных бюджетов и видеоинструкции. Также можно написать координатору: обратная связь в течение дня.</p>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question">🔹 Как происходит награждение?</div>
+                <p>По итогам защиты жюри присуждает номинации: «Лучшая совместимость», «Креативное обоснование», «Бюджетный шедевр», «Выбор профессионалов».</p>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question">🔹 Есть ли дифференциация для одаренных учеников?</div>
+                <p>Да, для них предлагается усложненное задание: подбор сборки для серверных задач или машинного обучения, а также углублённая аналитика по пропускной способности шин.</p>
+            </div>
+
+            <!-- Форма для отправки вопроса (имитация сохранения) -->
+            <div class="ask-question-area">
+                <h3 style="margin-bottom: 0.8rem;">💬 Задать свой вопрос</h3>
+                <div class="form-group" style="margin-bottom: 0.8rem;">
+                    <label>Ваше имя или команда</label>
+                    <input type="text" id="askerName" placeholder="Иван Иванов / команда «Кэш-память»">
+                </div>
+                <div class="form-group" style="margin-bottom: 0.8rem;">
+                    <label>Ваш вопрос</label>
+                    <textarea id="askerQuestion" rows="3" placeholder="Опишите ваш вопрос по проекту..."></textarea>
+                </div>
+                <button id="sendQuestionBtn" class="btn">📨 Отправить вопрос</button>
+                <div id="questionStatus" style="margin-top: 0.8rem; font-size: 0.85rem; color: #2C6E2C;"></div>
+                <p style="font-size: 0.75rem; margin-top: 0.5rem; color: #6c757d;">Все вопросы направляются координаторам проекта. Ответ появится в ближайшее время.</p>
+            </div>
+        </div>
+
+        <div class="footer-note">
+            © Купаловские проекты, 2026 • Автор: Данилевич Никита Юрьевич • Гродно, ГрГУ им. Янки Купалы<br>
+            📧 Организация взаимодействия: координаторам команд доступны чаты и формы обратной связи.
+        </div>
+    </div>
+</div>
+
+<script>
+    // -------------------- УПРАВЛЕНИЕ КОМАНДАМИ --------------------
+    let teamsArray = [
+        { name: "Кремниевые умы", members: "Анна К., Дмитрий Л., София М.", scenario: "Игровая станция", points: 270, stage: "Финальная защита", badge: "🏆 Совместимость Pro" },
+        { name: "Шина данных", members: "Игорь К., Елена В., Артем Н.", scenario: "Рабочая станция 3D", points: 210, stage: "Сборка в конфигураторе", badge: "🔧 Технический выбор" },
+        { name: "Кэш-память", members: "Виктор П., Ольга Р.", scenario: "Бюджетный офис", points: 180, stage: "Чек-лист", badge: "📊 Оптимизаторы" }
+    ];
+
+    // Загружаем ответы из localStorage
+    function loadAnswersFromStorage() {
+        for (let i = 1; i <= 4; i++) {
+            const saved = localStorage.getItem(`task_answer_${i}`);
+            if (saved) {
+                const textarea = document.getElementById(`answer${i}`);
+                if (textarea) textarea.value = saved;
+                const statusDiv = document.getElementById(`status${i}`);
+                if (statusDiv) statusDiv.innerHTML = "✅ Ответ сохранён (ожидает проверки)";
+            }
+        }
+    }
+
+    // Сохранение ответа на задание
+    function saveAnswer(taskId, answerText) {
+        if (!answerText.trim()) {
+            alert("Напишите ответ перед отправкой!");
+            return false;
+        }
+        localStorage.setItem(`task_answer_${taskId}`, answerText);
+        const statusDiv = document.getElementById(`status${taskId}`);
+        if (statusDiv) statusDiv.innerHTML = "✅ Ваш ответ сохранён. Координатор проверит и добавит баллы.";
+        return true;
+    }
+
+    // Рендер списка команд и таблицы рейтинга
+    function renderTeamsAndTable() {
+        const listContainer = document.getElementById("dynamicTeamsList");
+        if (listContainer) {
+            listContainer.innerHTML = "";
+            teamsArray.forEach(team => {
+                const teamDiv = document.createElement("div");
+                teamDiv.className = "team-item";
+                teamDiv.innerHTML = `<span class="team-name">🏷️ ${escapeHtml(team.name)}</span><br>👥 Участники: ${escapeHtml(team.members)}`;
+                listContainer.appendChild(teamDiv);
+            });
+            if (teamsArray.length === 0) listContainer.innerHTML = "<div class='team-item'>Нет команд. Создайте первую!</div>";
+        }
+
+        const tbody = document.getElementById("scoreTableBody");
+        if (tbody) {
+            tbody.innerHTML = "";
+            const sorted = [...teamsArray].sort((a,b) => b.points - a.points);
+            sorted.forEach((team, idx) => {
+                const row = tbody.insertRow();
+                row.insertCell(0).innerText = idx+1;
+                row.insertCell(1).innerHTML = `🖥️ ${escapeHtml(team.name)}`;
+                row.insertCell(2).innerText = team.scenario || "—";
+                row.insertCell(3).innerText = team.points;
+                row.insertCell(4).innerText = team.stage || "В процессе";
+                row.insertCell(5).innerText = team.badge || "📌 новичок";
+            });
+        }
+    }
+
+    function addTeam() {
+        const nameInput = document.getElementById("teamNameInput");
+        const membersInput = document.getElementById("teamMembersInput");
+        const name = nameInput.value.trim();
+        const members = membersInput.value.trim() || "Участники не указаны";
+        if (!name) { alert("Введите название команды!"); return; }
+        if (teamsArray.some(t => t.name.toLowerCase() === name.toLowerCase())) { alert("Такая команда уже есть"); return; }
+        teamsArray.push({ name, members, scenario: "Выбор сценария", points: 0, stage: "Подготовительный", badge: "🆕 Новая команда" });
+        renderTeamsAndTable();
+        nameInput.value = "";
+        membersInput.value = "";
+        alert(`Команда "${name}" добавлена!`);
+    }
+
+    // Симуляция баллов за задания
+    function simulatePointsFromTasks() {
+        let anyAnswer = false;
+        for (let i = 1; i <= 4; i++) {
+            const answer = localStorage.getItem(`task_answer_${i}`);
+            if (answer && answer.trim().length > 5) {
+                anyAnswer = true;
+                teamsArray.forEach(team => {
+                    if (team.points < 350) team.points += 12;
+                    if (team.stage === "Подготовительный" && team.points > 30) team.stage = "Изучение архитектуры";
+                    if (team.points >= 160 && team.stage !== "Сборка в конфигураторе") team.stage = "Сборка в конфигураторе";
+                    if (team.points >= 260) team.stage = "Финальная защита";
+                });
+            }
+        }
+        if (!anyAnswer) {
+            alert("Сначала напишите ответы в заданиях Квест-карты, затем нажмите симуляцию.");
+            return;
+        }
+        renderTeamsAndTable();
+        alert("✅ Баллы начислены командам за предоставленные ответы! (симуляция проверки)");
+    }
+
+    // Отправка вопроса (имитация)
+    function sendQuestion() {
+        const name = document.getElementById("askerName").value.trim();
+        const question = document.getElementById("askerQuestion").value.trim();
+        if (!question) {
+            alert("Пожалуйста, напишите ваш вопрос.");
+            return;
+        }
+        const sender = name || "Анонимный участник";
+        // Имитация сохранения: выводим уведомление, очищаем поле
+        document.getElementById("questionStatus").innerHTML = `📨 Спасибо, ${sender}! Ваш вопрос отправлен координаторам проекта. Ответ появится в разделе FAQ в ближайшее время.`;
+        document.getElementById("askerQuestion").value = "";
+        // можно сохранить в localStorage для имитации истории, но необязательно
+        setTimeout(() => {
+            document.getElementById("questionStatus").innerHTML = "";
+        }, 5000);
+    }
+
+    function escapeHtml(str) { if(!str) return ""; return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+    // Инициализация событий для ответов
+    function bindAnswerButtons() {
+        const buttons = document.querySelectorAll(".answer-submit");
+        buttons.forEach(btn => {
+            btn.removeEventListener("click", answerHandler);
+            btn.addEventListener("click", answerHandler);
+        });
+    }
+    function answerHandler(e) {
+        const taskId = e.target.getAttribute("data-task");
+        const textarea = document.getElementById(`answer${taskId}`);
+        if (textarea) {
+            saveAnswer(taskId, textarea.value);
+        }
+    }
+
+    // Навигация по якорям
+    function initNav() {
+        const navLinks = document.querySelectorAll(".nav-link");
+        navLinks.forEach(link => {
+            link.addEventListener("click", function() {
+                const targetId = this.getAttribute("data-target");
+                if (targetId) {
+                    const el = document.getElementById(targetId);
+                    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+            });
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        loadAnswersFromStorage();
+        renderTeamsAndTable();
+        bindAnswerButtons();
+        initNav();
+        const addBtn = document.getElementById("addTeamBtn");
+        if (addBtn) addBtn.addEventListener("click", addTeam);
+        const demoBtn = document.getElementById("demoUpdateBtn");
+        if (demoBtn) demoBtn.addEventListener("click", simulatePointsFromTasks);
+        const questionBtn = document.getElementById("sendQuestionBtn");
+        if (questionBtn) questionBtn.addEventListener("click", sendQuestion);
+    });
+</script>
+</body>
+</html>
